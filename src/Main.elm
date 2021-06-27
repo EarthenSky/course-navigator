@@ -17,6 +17,10 @@ import Http
 courseSubjectPage = "https://www.sfu.ca/students/calendar/2021/summer/courses.html"
 coursePage = "https://www.sfu.ca/students/calendar/2021/summer/courses/"
 
+-- TODO: fill this up
+subjectList : List { name : String, id : String }
+subjectList = []
+
 
 -- MAIN
 --
@@ -36,7 +40,8 @@ type Model =
     | CourseRequest ( String )
     
 
--- TODO: make an http request
+-- TODO: parse the site using html parser, then get a list of subject titles and names.
+-- NOTE: will also want a normal parser to handle getting better strings -> regex might be faster than using a parser if I do two passes...
 
 type Msg = GotSiteText (Result Http.Error String)
 
@@ -48,7 +53,7 @@ init _ =
 
 
 -- UPDATE
--- for my current purposes, update can be the indentity function
+-- 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = --(model, Cmd.none)

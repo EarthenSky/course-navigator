@@ -25,3 +25,20 @@
 - for each proffessor search them on rmp and store the rating.
 - 
 - cache the updated info every semester (rmp info)
+- 
+- update the parser config when the sfu website gets updated.
+
+## Helpfil Sites: TODO: minimize a little.
+- https://learnxinyminutes.com/docs/elm/
+- https://package.elm-lang.org/packages/elm/core/latest/Basics#Float
+- https://package.elm-lang.org/packages/mdgriffith/elm-ui/latest/
+- https://package.elm-lang.org/packages/elm/browser/latest/Browser#element
+- https://guide.elm-lang.org/effects/http.html
+- https://package.elm-lang.org/packages/elm/http/latest/Http
+- https://package.elm-lang.org/packages/elm/core/latest/Result
+- https://package.elm-lang.org/packages/ianmackenzie/elm-geometry/latest/
+- https://elm-visualization.netlify.app/forcedirectedgraph/
+- https://www.sfu.ca/students/calendar/2021/summer/courses.html
+- https://package.elm-lang.org/packages/elm/core/latest/Platform.Cmd
+- file:///.../course-navigator/index.html
+- https://package.elm-lang.org/packages/hecrj/html-parser/latest/
