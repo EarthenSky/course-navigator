@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Html exposing (Html)
+import Html.Parser
 -- import Debug exposing (todo)
 
 import Element exposing (Element, el, column, text, padding, rgb255, layout, spacing, explain)
@@ -14,7 +15,9 @@ import Http
 -- CONST
 --
 
+courseSubjectPage : String
 courseSubjectPage = "https://www.sfu.ca/students/calendar/2021/summer/courses.html"
+coursePage : String
 coursePage = "https://www.sfu.ca/students/calendar/2021/summer/courses/"
 
 -- TODO: fill this up
@@ -36,14 +39,16 @@ main =
 type alias Flags = ()
 type Model = 
     SubjectRequest 
+    | CourseRequest (String)
     | Failure
-    | CourseRequest ( String )
     
 
 -- TODO: parse the site using html parser, then get a list of subject titles and names.
 -- NOTE: will also want a normal parser to handle getting better strings -> regex might be faster than using a parser if I do two passes...
 
-type Msg = GotSiteText (Result Http.Error String)
+type Msg = 
+    GotSiteText (Result Http.Error String)
+    | ProcessCourseNames (String)
 
 init : Flags -> (Model, Cmd Msg)
 init _ =
@@ -61,7 +66,7 @@ update msg model = --(model, Cmd.none)
         GotSiteText result -> 
             case result of 
                 Ok text -> 
-                    (CourseRequest (text), Cmd.none)
+                    (CourseRequest (text), Cmd.none (text))
                 
                 Err _ -> 
                     (Failure, Cmd.none)
@@ -86,6 +91,8 @@ view model = layout []
 
         CourseRequest content -> 
             column [padding 20, spacing 10]
-                [ el [] (text content)
+                [ el [] (text subjectList),
+                  el [] (text "-----------------------------"),
+                  el [] (text content)
                 ]
     )
