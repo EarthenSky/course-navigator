@@ -42,3 +42,7 @@
 - https://package.elm-lang.org/packages/elm/core/latest/Platform.Cmd
 - file:///.../course-navigator/index.html
 - https://package.elm-lang.org/packages/hecrj/html-parser/latest/
+
+## Godsend libraries:
+- https://package.elm-lang.org/packages/elm-community/string-extra/latest/
+- 
