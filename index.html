@@ -6285,6 +6285,22 @@ var $author$project$Main$fill_http_get = F2(
 		return $elm$http$Http$get(
 			{expect: expect, url: url});
 	});
+var $elm$core$String$indices = _String_indexes;
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$Main$class_list_html_slice = function (html) {
+	var start = A2($elm$core$String$indices, '<div class=\"parsys\">', html);
+	var slice_html = function (_v0) {
+		var a = _v0.a;
+		var b = _v0.b;
+		return A3($elm$core$String$slice, a, b, html);
+	};
+	var end = A2($elm$core$String$indices, '<div class=\"below-main inherited-parsys\">', html);
+	var zipped_list = A3($elm$core$List$map2, $elm$core$Tuple$pair, start, end);
+	return A2($elm$core$List$map, slice_html, zipped_list);
+};
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -6293,40 +6309,6 @@ var $elm$core$List$head = function (list) {
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
-};
-var $elm$core$String$indices = _String_indexes;
-var $author$project$Main$classes_html_slice = function (html) {
-	var start = $elm$core$List$head(
-		A2($elm$core$String$indices, '<div class=\"parsys\">', html));
-	var end = $elm$core$List$head(
-		A2($elm$core$String$indices, '<div class=\"below-main inherited-parsys\">', html));
-	if (start.$ === 'Just') {
-		var start_index = start.a;
-		if (end.$ === 'Just') {
-			var end_index = end.a;
-			return $elm$core$Result$Ok(
-				A3($elm$core$String$slice, start_index, end_index, html));
-		} else {
-			return $elm$core$Result$Err('no end anchor');
-		}
-	} else {
-		return $elm$core$Result$Err('no start anchor');
-	}
-};
-var $elm$regex$Regex$Match = F4(
-	function (match, index, number, submatches) {
-		return {index: index, match: match, number: number, submatches: submatches};
-	});
-var $elm$regex$Regex$find = _Regex_findAtMost(_Regex_infinity);
-var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
-var $elm$regex$Regex$fromString = function (string) {
-	return A2(
-		$elm$regex$Regex$fromStringWith,
-		{caseInsensitive: false, multiline: false},
-		string);
-};
-var $author$project$Main$get_match = function (match) {
-	return match.match;
 };
 var $elm$core$String$replace = F3(
 	function (before, after, string) {
@@ -6391,24 +6373,21 @@ var $author$project$Main$newSubjectRecord = function (listEntry) {
 		$elm$core$List$head(titleList));
 	return {classRecords: _List_Nil, id: id, name: name, path: path};
 };
-var $elm$core$List$partition = F2(
-	function (pred, list) {
-		var step = F2(
-			function (x, _v0) {
-				var trues = _v0.a;
-				var falses = _v0.b;
-				return pred(x) ? _Utils_Tuple2(
-					A2($elm$core$List$cons, x, trues),
-					falses) : _Utils_Tuple2(
-					trues,
-					A2($elm$core$List$cons, x, falses));
-			});
-		return A3(
-			$elm$core$List$foldr,
-			step,
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			list);
+var $elm$regex$Regex$Match = F4(
+	function (match, index, number, submatches) {
+		return {index: index, match: match, number: number, submatches: submatches};
 	});
+var $elm$regex$Regex$find = _Regex_findAtMost(_Regex_infinity);
+var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
+var $elm$regex$Regex$fromString = function (string) {
+	return A2(
+		$elm$regex$Regex$fromStringWith,
+		{caseInsensitive: false, multiline: false},
+		string);
+};
+var $author$project$Main$get_match = function (match) {
+	return match.match;
+};
 var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
@@ -6515,14 +6494,50 @@ var $author$project$Main$updateSubjectRecord = F2(
 			path: originRecord.path
 		};
 	});
-var $author$project$Main$get_class_info = F3(
+var $author$project$Main$parse_custom_record = F2(
+	function (targetRecord, area_string) {
+		var regex_match_strings = function () {
+			var _v0 = $elm$regex$Regex$fromString('<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>(.|\\s)*</p>');
+			if (_v0.$ === 'Just') {
+				var regex = _v0.a;
+				return A2(
+					$elm$core$List$map,
+					$author$project$Main$get_match,
+					A2($elm$regex$Regex$find, regex, area_string));
+			} else {
+				return _List_fromArray(
+					['failed']);
+			}
+		}();
+		var new_record = A2($author$project$Main$updateSubjectRecord, targetRecord, regex_match_strings);
+		return new_record;
+	});
+var $elm$core$List$partition = F2(
+	function (pred, list) {
+		var step = F2(
+			function (x, _v0) {
+				var trues = _v0.a;
+				var falses = _v0.b;
+				return pred(x) ? _Utils_Tuple2(
+					A2($elm$core$List$cons, x, trues),
+					falses) : _Utils_Tuple2(
+					trues,
+					A2($elm$core$List$cons, x, falses));
+			});
+		return A3(
+			$elm$core$List$foldr,
+			step,
+			_Utils_Tuple2(_List_Nil, _List_Nil),
+			list);
+	});
+var $author$project$Main$get_all_class_info = F3(
 	function (html_text, path, model) {
 		switch (model.$) {
 			case 'SubjectRequest':
 				return $elm$core$Result$Err('current model doesn\'t support this kind of request: SubjectRequest');
 			case 'CourseRequest':
 				var subjectRecords = model.a;
-				var area_string_result = $author$project$Main$classes_html_slice(html_text);
+				var class_description_list = $author$project$Main$class_list_html_slice(html_text);
 				var _v1 = A2(
 					$elm$core$List$partition,
 					function (record) {
@@ -6535,28 +6550,13 @@ var $author$project$Main$get_class_info = F3(
 					$elm$core$Maybe$withDefault,
 					$author$project$Main$newSubjectRecord(''),
 					$elm$core$List$head(xRecord));
-				var _v2 = $elm$regex$Regex$fromString('<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>(.|\\s)*</p>');
-				if (_v2.$ === 'Just') {
-					var regex = _v2.a;
-					if (area_string_result.$ === 'Ok') {
-						var area_string = area_string_result.a;
-						var regex_match_strings = A2(
+				return $elm$core$Result$Ok(
+					_Utils_ap(
+						xsRecords,
+						A2(
 							$elm$core$List$map,
-							$author$project$Main$get_match,
-							A2($elm$regex$Regex$find, regex, area_string));
-						var new_record = A2($author$project$Main$updateSubjectRecord, targetRecord, regex_match_strings);
-						return $elm$core$Result$Ok(
-							_Utils_ap(
-								xsRecords,
-								_List_fromArray(
-									[new_record])));
-					} else {
-						var err = area_string_result.a;
-						return $elm$core$Result$Err(err);
-					}
-				} else {
-					return $elm$core$Result$Err('invalid regex');
-				}
+							$author$project$Main$parse_custom_record(targetRecord),
+							class_description_list)));
 			default:
 				var str = model.a;
 				return $elm$core$Result$Err('current model doesn\'t support this kind of request: Failure, reason: ');
@@ -6644,10 +6644,10 @@ var $author$project$Main$update = F2(
 			}
 		} else {
 			var path = msg.a;
-			var result = msg.b;
-			if (result.$ === 'Ok') {
-				var text = result.a;
-				var _v4 = A3($author$project$Main$get_class_info, text, path, model);
+			var result_text = msg.b;
+			if (result_text.$ === 'Ok') {
+				var page_text = result_text.a;
+				var _v4 = A3($author$project$Main$get_all_class_info, page_text, path, model);
 				if (_v4.$ === 'Ok') {
 					var courses = _v4.a;
 					return _Utils_Tuple2(
@@ -6675,7 +6675,7 @@ var $author$project$Main$update = F2(
 					}
 				}
 			} else {
-				var err = result.a;
+				var err = result_text.a;
 				return _Utils_Tuple2(
 					$author$project$Main$Failure(
 						$elm$core$Debug$toString(err)),
@@ -12252,32 +12252,18 @@ var $author$project$Main$display_course_subject = function (record) {
 				$mdgriffith$elm_ui$Element$padding(20),
 				$mdgriffith$elm_ui$Element$spacing(10)
 			]),
-		_Utils_ap(
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_Nil,
-					$mdgriffith$elm_ui$Element$text(record.path))
-				]),
-			_Utils_ap(
-				_List_fromArray(
-					[
-						A2(
-						$mdgriffith$elm_ui$Element$el,
-						_List_Nil,
-						$mdgriffith$elm_ui$Element$text(
-							$elm$core$Debug$toString(record.classRecords)))
-					]),
+		_List_fromArray(
+			[
 				A2(
-					$elm$core$List$map,
-					function (cr) {
-						return A2(
-							$mdgriffith$elm_ui$Element$el,
-							_List_Nil,
-							$mdgriffith$elm_ui$Element$text(cr.id + (' : ' + cr.desc)));
-					},
-					record.classRecords))));
+				$mdgriffith$elm_ui$Element$el,
+				_List_Nil,
+				$mdgriffith$elm_ui$Element$text(record.path)),
+				A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_Nil,
+				$mdgriffith$elm_ui$Element$text(
+					$elm$core$Debug$toString(record.classRecords)))
+			]));
 };
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
 	function (a, b) {

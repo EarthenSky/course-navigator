@@ -7,7 +7,7 @@
 
 ## How to build:
 - `elm make src/Main.elm` creates an html file with the app in it.
-- `elm make src/Main.elm --output=main.js` creates a js file with an embeddable version of the app. (**TODO: check this here** https://guide.elm-lang.org/interop/ )
+- `elm make src/Main.elm --output=main.js` creates a js file with an embeddable version of the app. (**TODO: check this here** https://guide.elm-lang.org/interop/)
 
 ## Roadmap:
 - make an html request to sfu calendar (allow choice of year for graph).

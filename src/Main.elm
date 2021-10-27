@@ -124,21 +124,20 @@ newClassRecord recordString =
     -- TODO: this
 
 -- TODO: use A parser instead of a regex eventually
-
 type alias Flags = ()
 type Model = 
     SubjectRequest 
     | CourseRequest (List SubjectRecord) -- TODO: change the name of this
     | Failure (String)
     
+type Msg = 
+    GotSubjectPageText (Result Http.Error String) -- once
+    | GotClassPageText String (Result Http.Error String) -- N times
+    --| ProcessCourseNames (String)
+
 
 -- TODO: parse the site using html parser, then get a list of subject titles and names.
 -- NOTE: will also want a normal parser to handle getting better strings -> regex might be faster than using a parser if I do two passes...
-
-type Msg = 
-    GotSubjectPageText (Result Http.Error String)
-    | GotClassPageText String (Result Http.Error String)
-    --| ProcessCourseNames (String)
 
 init : Flags -> (Model, Cmd Msg)
 init _ =
@@ -164,9 +163,9 @@ update msg model = --(model, Cmd.none)
                 Err err -> 
                     (Failure <| Debug.toString err, Cmd.none)
         
-        GotClassPageText path result -> -- TODO: update one of the pages & do a request for extended class info.
-            case result of
-                Ok text -> case get_class_info text path model of
+        GotClassPageText path result_text -> -- TODO: update one of the pages & do a request for extended class info.
+            case result_text of
+                Ok page_text -> case (get_all_class_info page_text path model) of
                     Ok courses -> (CourseRequest courses, Cmd.none) -- might only need extended class info to see if it's being offered this semester.
                     Err err -> case model of
                         SubjectRequest -> (Failure <| (Debug.toString err) ++ " branch 2", Cmd.none)
@@ -204,7 +203,9 @@ view model = layout []
 display_course_subject : SubjectRecord -> Element Msg
 display_course_subject record = 
     column [padding 20, spacing 10] 
-        ( [el [] (text <| record.path)] ++ [el [] (text <| Debug.toString record.classRecords)] ++ (map (\cr -> el [] (text <| cr.id ++ " : " ++ cr.desc)) record.classRecords)
+        ([el [] (text record.path)
+        , el [] (text (Debug.toString record.classRecords))] 
+        --++ (map (\cr -> el [] (text <| cr.id ++ " : " ++ cr.desc)) record.classRecords)
         )
 
 
@@ -221,28 +222,30 @@ get_subject_names html_text =
                 Err err -> Err err  
             Nothing -> Err "invalid regex"
 
-get_class_info : String -> String -> Model -> Result String (List SubjectRecord)
-get_class_info html_text path model = 
+parse_custom_record : SubjectRecord -> String -> SubjectRecord
+parse_custom_record targetRecord area_string = 
+    let
+        regex_match_strings = case Regex.fromString("<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>(.|\\s)*</p>") of 
+            Just regex -> map get_match (Regex.find regex area_string)
+            Nothing -> ["failed"] -- 
+        new_record = updateSubjectRecord targetRecord regex_match_strings
+    in
+        new_record
+
+-- TODO: I messed everything up herer
+get_all_class_info : String -> String -> Model -> Result String (List SubjectRecord)
+get_all_class_info html_text path model = 
     case model of
         SubjectRequest -> 
             Err "current model doesn't support this kind of request: SubjectRequest"
 
         CourseRequest subjectRecords -> 
             let
-                area_string_result = classes_html_slice html_text
-                (xRecord, xsRecords) = List.partition (\record -> record.path == path) subjectRecords  -- TODO: add x to the end of xs (we don't care about the order of subjectRecords [Should I use a set?])
-                targetRecord = (withDefault (newSubjectRecord "") <| head xRecord)
+                class_description_list = grab_html_slice_of_classpage html_text
+                (xRecord, xsRecords) = List.partition (\record -> record.path == path) subjectRecords
+                targetRecord = withDefault (newSubjectRecord "") (head xRecord)
             in 
-                case Regex.fromString("<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>(.|\\s)*</p>") of 
-                    Just regex -> case area_string_result of 
-                        Ok area_string -> 
-                            let
-                                regex_match_strings = map get_match (Regex.find regex area_string)
-                                new_record = updateSubjectRecord targetRecord regex_match_strings
-                            in
-                                Ok <| xsRecords ++ [new_record]
-                        Err err -> Err err
-                    Nothing -> Err "invalid regex"
+                Ok (xsRecords ++ (map (parse_custom_record targetRecord) class_description_list))
 
         Failure str -> 
             Err ("current model doesn't support this kind of request: Failure, reason: ") --++ str)
@@ -252,7 +255,7 @@ get_match match = match.match
 
 course_subject_html_slice : String -> Result String String
 course_subject_html_slice html = 
-    let 
+    let
         start = head <| indices "<a name=\"a\"></a>" html
         end = head <| indices "<div class=\"below-main inherited-parsys\">" html
     in
@@ -262,17 +265,18 @@ course_subject_html_slice html =
                 Nothing -> Err "no end anchor"
             Nothing -> Err "no start anchor"
 
-classes_html_slice : String -> Result String String
-classes_html_slice html = 
-    let 
-        start = head <| indices "<div class=\"parsys\">" html
-        end = head <| indices "<div class=\"below-main inherited-parsys\">" html
+-- NOTE: this literally should NOT be a list. This just gives us a more clean string  
+-- containing all classes on the page.
+-- TODO: fix this shit -> dont return list, do list somewhere else.
+grab_html_slice_of_classpage : String -> List String
+grab_html_slice_of_classpage html = 
+    let
+        start = withDefault  <| "no anchor found" head <| (indices "<div class=\"parsys\">" html)
+        end = withDefault <| "no anchor found" head <| (indices "<div class=\"below-main inherited-parsys\">" html)
+        zipped_list = List.map2 Tuple.pair start end
+        slice_html = \(a, b) -> slice a b html
     in
-        case start of 
-            Just start_index -> case end of 
-                Just end_index -> Ok (slice start_index end_index html)
-                Nothing -> Err "no end anchor"
-            Nothing -> Err "no start anchor"
+        (map slice_html zipped_list)
 
 -- UTILS ------------------------------------
 
