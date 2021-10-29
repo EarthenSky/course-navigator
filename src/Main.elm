@@ -154,7 +154,7 @@ update msg model = --(model, Cmd.none)
         GotSubjectPageText result -> 
             case result of 
                 Ok text -> 
-                    case get_subject_names text of
+                    case get_initial_subject_records text of
                         Ok courses -> 
                             ( CourseRequest courses 
                             , Cmd.batch <| map (\subjectRecord -> fill_http_get (sfuUrl ++ subjectRecord.path) (Http.expectString (GotClassPageText subjectRecord.path))) courses
@@ -165,7 +165,7 @@ update msg model = --(model, Cmd.none)
         
         GotClassPageText path result_text -> -- TODO: update one of the pages & do a request for extended class info.
             case result_text of
-                Ok page_text -> case (get_all_class_info page_text path model) of
+                Ok page_text -> case add_class_data_to_record page_text path model of
                     Ok courses -> (CourseRequest courses, Cmd.none) -- might only need extended class info to see if it's being offered this semester.
                     Err err -> case model of
                         SubjectRequest -> (Failure <| (Debug.toString err) ++ " branch 2", Cmd.none)
@@ -211,8 +211,8 @@ display_course_subject record =
 
 -- FUNCTIONS ------------------------------------
 
-get_subject_names : String -> Result String (List SubjectRecord)
-get_subject_names html_text = 
+get_initial_subject_records : String -> Result String (List SubjectRecord)
+get_initial_subject_records html_text = 
     let 
         area_string_result = course_subject_html_slice html_text
     in
@@ -222,33 +222,42 @@ get_subject_names html_text =
                 Err err -> Err err  
             Nothing -> Err "invalid regex"
 
-parse_custom_record : SubjectRecord -> String -> SubjectRecord
-parse_custom_record targetRecord area_string = 
-    let
-        regex_match_strings = case Regex.fromString("<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>(.|\\s)*</p>") of 
-            Just regex -> map get_match (Regex.find regex area_string)
-            Nothing -> ["failed"] -- 
-        new_record = updateSubjectRecord targetRecord regex_match_strings
+get_coursedata_list : String -> List String
+get_coursedata_list minimized_html = 
+    let -- <h3>\s*<a href=\\\".*\\\">.*</a>.*\s*\(\d\)\s*</h3>\s*<p>.*</p>
+        regex_match_string_list = case Regex.fromString("<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>.*</p>") of 
+            Just regex -> 
+                let
+                    minimized_html2 = replace "\n" " " minimized_html
+                    minimized_html3 = replace "\t" " " minimized_html2
+                    --_ = Debug.log "LOG1: " (minimized_html3)
+                    _ = Debug.log "LOG2: " (Debug.toString (List.length (map .match (Regex.find regex minimized_html3)))) -- SIZE 1 (mostly)
+                in
+                    map .match (Regex.find regex minimized_html3)
+            Nothing -> ["bad regex"]
     in
-        new_record
+        regex_match_string_list
 
--- TODO: I messed everything up herer
-get_all_class_info : String -> String -> Model -> Result String (List SubjectRecord)
-get_all_class_info html_text path model = 
+-- TODO: some are broken, but some are not.... WHYYYYY
+-- get target record from the model. update the record. Insert into list again.
+add_class_data_to_record : String -> String -> Model -> Result String (List SubjectRecord)
+add_class_data_to_record html_text path model = 
     case model of
         SubjectRequest -> 
             Err "current model doesn't support this kind of request: SubjectRequest"
 
         CourseRequest subjectRecords -> 
             let
-                class_description_list = grab_html_slice_of_classpage html_text
+                class_descriptions = classpage_minimized_string html_text
                 (xRecord, xsRecords) = List.partition (\record -> record.path == path) subjectRecords
                 targetRecord = withDefault (newSubjectRecord "") (head xRecord)
+                courseDataList = get_coursedata_list class_descriptions -- list of string for each course -- is this NOT a list?
+                _ = Debug.log "__ LOG: " (Debug.toString (List.length courseDataList)) -- SIZE 1 (mostly)
+                updatedRecord = updateSubjectRecord targetRecord courseDataList
             in 
-                Ok (xsRecords ++ (map (parse_custom_record targetRecord) class_description_list))
-
+                Ok (xsRecords ++ [updatedRecord])
         Failure str -> 
-            Err ("current model doesn't support this kind of request: Failure, reason: ") --++ str)
+            Err ("current model doesn't support this kind of request: Failure.\n\tReason: " ++ str)
 
 get_match : Regex.Match -> String
 get_match match = match.match
@@ -265,18 +274,16 @@ course_subject_html_slice html =
                 Nothing -> Err "no end anchor"
             Nothing -> Err "no start anchor"
 
--- NOTE: this literally should NOT be a list. This just gives us a more clean string  
+-- NOTE: This function just gives us a more clean string  
 -- containing all classes on the page.
--- TODO: fix this shit -> dont return list, do list somewhere else.
-grab_html_slice_of_classpage : String -> List String
-grab_html_slice_of_classpage html = 
+classpage_minimized_string : String -> String
+classpage_minimized_string html = 
     let
-        start = withDefault  <| "no anchor found" head <| (indices "<div class=\"parsys\">" html)
-        end = withDefault <| "no anchor found" head <| (indices "<div class=\"below-main inherited-parsys\">" html)
-        zipped_list = List.map2 Tuple.pair start end
-        slice_html = \(a, b) -> slice a b html
+        -- TODO: is a -1 default okay?
+        start = withDefault -1 (head (indices "<div class=\"parsys\">" html))
+        end = withDefault -1 (head (indices "<div class=\"below-main inherited-parsys\">" html))
     in
-        (map slice_html zipped_list)
+        slice start end html
 
 -- UTILS ------------------------------------
 

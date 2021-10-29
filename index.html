@@ -6279,28 +6279,6 @@ var $author$project$Main$GotClassPageText = F2(
 	function (a, b) {
 		return {$: 'GotClassPageText', a: a, b: b};
 	});
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $author$project$Main$fill_http_get = F2(
-	function (url, expect) {
-		return $elm$http$Http$get(
-			{expect: expect, url: url});
-	});
-var $elm$core$String$indices = _String_indexes;
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
-	});
-var $author$project$Main$class_list_html_slice = function (html) {
-	var start = A2($elm$core$String$indices, '<div class=\"parsys\">', html);
-	var slice_html = function (_v0) {
-		var a = _v0.a;
-		var b = _v0.b;
-		return A3($elm$core$String$slice, a, b, html);
-	};
-	var end = A2($elm$core$String$indices, '<div class=\"below-main inherited-parsys\">', html);
-	var zipped_list = A3($elm$core$List$map2, $elm$core$Tuple$pair, start, end);
-	return A2($elm$core$List$map, slice_html, zipped_list);
-};
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -6310,21 +6288,9 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$String$replace = F3(
-	function (before, after, string) {
-		return A2(
-			$elm$core$String$join,
-			after,
-			A2($elm$core$String$split, before, string));
-	});
-var $elm$core$List$tail = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(xs);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
+var $elm$core$String$indices = _String_indexes;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
 };
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -6335,6 +6301,80 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
+var $author$project$Main$classpage_minimized_string = function (html) {
+	var start = A2(
+		$elm$core$Maybe$withDefault,
+		-1,
+		$elm$core$List$head(
+			A2($elm$core$String$indices, '<div class=\"parsys\">', html)));
+	var end = A2(
+		$elm$core$Maybe$withDefault,
+		-1,
+		$elm$core$List$head(
+			A2($elm$core$String$indices, '<div class=\"below-main inherited-parsys\">', html)));
+	return A3($elm$core$String$slice, start, end, html);
+};
+var $elm$regex$Regex$Match = F4(
+	function (match, index, number, submatches) {
+		return {index: index, match: match, number: number, submatches: submatches};
+	});
+var $elm$regex$Regex$find = _Regex_findAtMost(_Regex_infinity);
+var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
+var $elm$regex$Regex$fromString = function (string) {
+	return A2(
+		$elm$regex$Regex$fromStringWith,
+		{caseInsensitive: false, multiline: false},
+		string);
+};
+var $elm$core$Debug$log = _Debug_log;
+var $elm$core$String$replace = F3(
+	function (before, after, string) {
+		return A2(
+			$elm$core$String$join,
+			after,
+			A2($elm$core$String$split, before, string));
+	});
+var $elm$core$Debug$toString = _Debug_toString;
+var $author$project$Main$get_coursedata_list = function (minimized_html) {
+	var regex_match_string_list = function () {
+		var _v0 = $elm$regex$Regex$fromString('<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>.*</p>');
+		if (_v0.$ === 'Just') {
+			var regex = _v0.a;
+			var minimized_html2 = A3($elm$core$String$replace, '\n', ' ', minimized_html);
+			var minimized_html3 = A3($elm$core$String$replace, '\t', ' ', minimized_html2);
+			var _v1 = A2(
+				$elm$core$Debug$log,
+				'LOG2: ',
+				$elm$core$Debug$toString(
+					$elm$core$List$length(
+						A2(
+							$elm$core$List$map,
+							function ($) {
+								return $.match;
+							},
+							A2($elm$regex$Regex$find, regex, minimized_html3)))));
+			return A2(
+				$elm$core$List$map,
+				function ($) {
+					return $.match;
+				},
+				A2($elm$regex$Regex$find, regex, minimized_html3));
+		} else {
+			return _List_fromArray(
+				['bad regex']);
+		}
+	}();
+	return regex_match_string_list;
+};
+var $elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(xs);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $author$project$Main$second = function (list) {
 	return $elm$core$List$head(
 		A2(
@@ -6373,21 +6413,24 @@ var $author$project$Main$newSubjectRecord = function (listEntry) {
 		$elm$core$List$head(titleList));
 	return {classRecords: _List_Nil, id: id, name: name, path: path};
 };
-var $elm$regex$Regex$Match = F4(
-	function (match, index, number, submatches) {
-		return {index: index, match: match, number: number, submatches: submatches};
+var $elm$core$List$partition = F2(
+	function (pred, list) {
+		var step = F2(
+			function (x, _v0) {
+				var trues = _v0.a;
+				var falses = _v0.b;
+				return pred(x) ? _Utils_Tuple2(
+					A2($elm$core$List$cons, x, trues),
+					falses) : _Utils_Tuple2(
+					trues,
+					A2($elm$core$List$cons, x, falses));
+			});
+		return A3(
+			$elm$core$List$foldr,
+			step,
+			_Utils_Tuple2(_List_Nil, _List_Nil),
+			list);
 	});
-var $elm$regex$Regex$find = _Regex_findAtMost(_Regex_infinity);
-var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
-var $elm$regex$Regex$fromString = function (string) {
-	return A2(
-		$elm$regex$Regex$fromStringWith,
-		{caseInsensitive: false, multiline: false},
-		string);
-};
-var $author$project$Main$get_match = function (match) {
-	return match.match;
-};
 var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
@@ -6406,9 +6449,6 @@ var $elm_community$string_extra$String$Extra$clean = function (string) {
 			$elm_community$string_extra$String$Extra$regexFromString('\\s\\s+'),
 			$elm$core$Basics$always(' '),
 			string));
-};
-var $elm$core$Basics$negate = function (n) {
-	return -n;
 };
 var $author$project$Main$newClassRecord = function (recordString) {
 	var cleanedString = $elm_community$string_extra$String$Extra$clean(
@@ -6494,50 +6534,15 @@ var $author$project$Main$updateSubjectRecord = F2(
 			path: originRecord.path
 		};
 	});
-var $author$project$Main$parse_custom_record = F2(
-	function (targetRecord, area_string) {
-		var regex_match_strings = function () {
-			var _v0 = $elm$regex$Regex$fromString('<h3>\\s*<a href=\".*\">.*</a>.*\\s*\\(\\d\\)\\s*</h3>\\s*<p>(.|\\s)*</p>');
-			if (_v0.$ === 'Just') {
-				var regex = _v0.a;
-				return A2(
-					$elm$core$List$map,
-					$author$project$Main$get_match,
-					A2($elm$regex$Regex$find, regex, area_string));
-			} else {
-				return _List_fromArray(
-					['failed']);
-			}
-		}();
-		var new_record = A2($author$project$Main$updateSubjectRecord, targetRecord, regex_match_strings);
-		return new_record;
-	});
-var $elm$core$List$partition = F2(
-	function (pred, list) {
-		var step = F2(
-			function (x, _v0) {
-				var trues = _v0.a;
-				var falses = _v0.b;
-				return pred(x) ? _Utils_Tuple2(
-					A2($elm$core$List$cons, x, trues),
-					falses) : _Utils_Tuple2(
-					trues,
-					A2($elm$core$List$cons, x, falses));
-			});
-		return A3(
-			$elm$core$List$foldr,
-			step,
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			list);
-	});
-var $author$project$Main$get_all_class_info = F3(
+var $author$project$Main$add_class_data_to_record = F3(
 	function (html_text, path, model) {
 		switch (model.$) {
 			case 'SubjectRequest':
 				return $elm$core$Result$Err('current model doesn\'t support this kind of request: SubjectRequest');
 			case 'CourseRequest':
 				var subjectRecords = model.a;
-				var class_description_list = $author$project$Main$class_list_html_slice(html_text);
+				var class_descriptions = $author$project$Main$classpage_minimized_string(html_text);
+				var courseDataList = $author$project$Main$get_coursedata_list(class_descriptions);
 				var _v1 = A2(
 					$elm$core$List$partition,
 					function (record) {
@@ -6550,17 +6555,27 @@ var $author$project$Main$get_all_class_info = F3(
 					$elm$core$Maybe$withDefault,
 					$author$project$Main$newSubjectRecord(''),
 					$elm$core$List$head(xRecord));
+				var updatedRecord = A2($author$project$Main$updateSubjectRecord, targetRecord, courseDataList);
+				var _v2 = A2(
+					$elm$core$Debug$log,
+					'__ LOG: ',
+					$elm$core$Debug$toString(
+						$elm$core$List$length(courseDataList)));
 				return $elm$core$Result$Ok(
 					_Utils_ap(
 						xsRecords,
-						A2(
-							$elm$core$List$map,
-							$author$project$Main$parse_custom_record(targetRecord),
-							class_description_list)));
+						_List_fromArray(
+							[updatedRecord])));
 			default:
 				var str = model.a;
-				return $elm$core$Result$Err('current model doesn\'t support this kind of request: Failure, reason: ');
+				return $elm$core$Result$Err('current model doesn\'t support this kind of request: Failure.\n\tReason: ' + str);
 		}
+	});
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $author$project$Main$fill_http_get = F2(
+	function (url, expect) {
+		return $elm$http$Http$get(
+			{expect: expect, url: url});
 	});
 var $author$project$Main$course_subject_html_slice = function (html) {
 	var start = $elm$core$List$head(
@@ -6580,7 +6595,10 @@ var $author$project$Main$course_subject_html_slice = function (html) {
 		return $elm$core$Result$Err('no start anchor');
 	}
 };
-var $author$project$Main$get_subject_names = function (html_text) {
+var $author$project$Main$get_match = function (match) {
+	return match.match;
+};
+var $author$project$Main$get_initial_subject_records = function (html_text) {
 	var area_string_result = $author$project$Main$course_subject_html_slice(html_text);
 	var _v0 = $elm$regex$Regex$fromString('<li><a href=\".*\".*\\(.*\\)</li>');
 	if (_v0.$ === 'Just') {
@@ -6605,14 +6623,13 @@ var $author$project$Main$get_subject_names = function (html_text) {
 };
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$sfuUrl = 'https://www.sfu.ca/';
-var $elm$core$Debug$toString = _Debug_toString;
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'GotSubjectPageText') {
 			var result = msg.a;
 			if (result.$ === 'Ok') {
 				var text = result.a;
-				var _v2 = $author$project$Main$get_subject_names(text);
+				var _v2 = $author$project$Main$get_initial_subject_records(text);
 				if (_v2.$ === 'Ok') {
 					var courses = _v2.a;
 					return _Utils_Tuple2(
@@ -6647,7 +6664,7 @@ var $author$project$Main$update = F2(
 			var result_text = msg.b;
 			if (result_text.$ === 'Ok') {
 				var page_text = result_text.a;
-				var _v4 = A3($author$project$Main$get_all_class_info, page_text, path, model);
+				var _v4 = A3($author$project$Main$add_class_data_to_record, page_text, path, model);
 				if (_v4.$ === 'Ok') {
 					var courses = _v4.a;
 					return _Utils_Tuple2(
