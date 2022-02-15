@@ -1,49 +1,91 @@
+//import { TransformControls } from 'https://cdn.skypack.dev/three@<version>/examples/jsm/controls/TransformControls.js';
+
+var courseData = null
+
+const pointer = new THREE.Vector2()
+var pointerDown = false
+
+const cameraTarget = new THREE.Vector2()
+
+network_test()
+
 // --------------------------------- 
-// debug
-
-main()
-
-async function main() {  
-    let years = await getYears()
-    console.log(years)
-
-    let terms = await getTerms(years[4].value)
-    console.log(terms)
-
-    let departments = await getDepartments(years[4].value, terms[1].value)
-    console.log(departments)
-
-    let courseNumbers = await getCourseNumbers(years[4].value, terms[1].value, departments[27].value)
-    console.log(courseNumbers)
-
-    let courseSections = await getCourseSections(years[4].value, terms[1].value, departments[27].value, courseNumbers[7].value)
-    console.log(courseSections)
-
-    let courseOutline = await getCourseOutline(years[4].value, terms[1].value, departments[27].value, courseNumbers[7].value, courseSections[0].value)
-    console.log(courseOutline)
-
-}
 
 function start() {
+    // data
+    //courseData = getAllCourseData("2021", "spring")
+
+    // geometry
+    root.geometry = new THREE.BoxGeometry()
+    root.material = new THREE.MeshBasicMaterial( { color: 0xf0ff40 } )
+    root.cube = new THREE.Mesh(root.geometry, root.material)
+    scene.add(root.cube) // TODO: look into how we should be loading & unloading models from the scene / if we should have multiple scenes.
+
+    // input
+    //var transformControls = new THREE.TransformControls(camera, renderer.domElement)
+    //transformControls.addEventListener('change', render)
+
+    renderer.domElement.addEventListener( 'pointermove', onPointerMove )
+    renderer.domElement.addEventListener( 'pointerdown', onPointerDown )
+    renderer.domElement.addEventListener( 'pointerup', onPointerCancel )
+    renderer.domElement.addEventListener( 'pointerleave', onPointerCancel )
+        
+    // init
 
 }
 
 function update() {
-    cube.rotation.x += 0.01
-    cube.rotation.y += 0.01
+    root.cube.rotation.x += 0.01
+    root.cube.rotation.y += 0.01
+
+    camera.position.x = cameraTarget.x
+    camera.position.y = cameraTarget.y
 }
 
-// --------------------------------- 
-// load control
+// ---------------------------------
+// derived from https://github.com/mrdoob/three.js/blob/master/examples/jsm/controls/DragControls.js
 
-function loadMain() {
-    const geometry = new THREE.BoxGeometry()
-    const material = new THREE.MeshBasicMaterial( { color: 0xf0ff40 } )
-    const cube = new THREE.Mesh(geometry, material)
-    scene.add(cube)
+function onPointerMove(event) {
+    updatePointer(event)
 
-    // TODO: look into how we should be loading & unloading models from the scene / if we should have multiple scenes.
-    //scene.get
+    // TODO: hover support
+}
+
+function onPointerDown(event) {
+    pointerDown = true
+
+    updatePointer(event)
     
-    camera.position.z = 5
+    renderer.domElement.cursor = 'move'
+}
+
+function onPointerCancel() {
+    pointerDown = false;
+}
+
+function updatePointer(event) {
+    const rect = renderer.domElement.getBoundingClientRect()
+
+    let pointerLastX = pointer.x
+    let pointerLastY = pointer.y
+
+    pointer.x = ( event.clientX - rect.left ) / rect.width * 2 - 1
+    pointer.y = -( event.clientY - rect.top ) / rect.height * 2 + 1
+
+    if (pointerDown) {
+        cameraTarget.x -= 5*(pointer.x - pointerLastX)
+        cameraTarget.y -= 5*(pointer.y - pointerLastY)
+    }
+}
+
+
+// --------------------------------- 
+
+// TODO: test this
+if ( WebGL.isWebGLAvailable() ) {
+    start()
+	animate()
+} else {
+	const warning = WebGL.getWebGLErrorMessage()
+	document.getElementById( 'container' ).appendChild( warning )
 }
