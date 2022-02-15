@@ -7,19 +7,21 @@ var pointerDown = false
 
 const cameraTarget = new THREE.Vector2()
 
-network_test()
+//network_test()
 
 // --------------------------------- 
 
-function start() {
+async function start() {
     // data
     //courseData = getAllCourseData("2021", "spring")
 
     // geometry
+    /*
     root.geometry = new THREE.BoxGeometry()
     root.material = new THREE.MeshBasicMaterial( { color: 0xf0ff40 } )
     root.cube = new THREE.Mesh(root.geometry, root.material)
-    scene.add(root.cube) // TODO: look into how we should be loading & unloading models from the scene / if we should have multiple scenes.
+    */
+    //scene.add(root.cube) // TODO: look into how we should be loading & unloading models from the scene / if we should have multiple scenes.
 
     // input
     //var transformControls = new THREE.TransformControls(camera, renderer.domElement)
@@ -29,14 +31,28 @@ function start() {
     renderer.domElement.addEventListener( 'pointerdown', onPointerDown )
     renderer.domElement.addEventListener( 'pointerup', onPointerCancel )
     renderer.domElement.addEventListener( 'pointerleave', onPointerCancel )
-        
+    renderer.domElement.addEventListener( 'wheel', onScroll );
+
     // init
+    //generateCourseNodes()
+    console.log("start")
+    root.courseData = await getAllCourseData("2021", "spring")
+    console.log("done")
+    downloadObjectAsJson(root.courseData, '2021spring-courseData')
+
+    root.courseNodes = []
+
+    //
+
+    root.courseNodes.forEach(el => {
+        scene.add(el);
+    });
 
 }
 
 function update() {
-    root.cube.rotation.x += 0.01
-    root.cube.rotation.y += 0.01
+    //root.cube.rotation.x += 0.01
+    //root.cube.rotation.y += 0.01
 
     camera.position.x = cameraTarget.x
     camera.position.y = cameraTarget.y
@@ -73,11 +89,21 @@ function updatePointer(event) {
     pointer.y = -( event.clientY - rect.top ) / rect.height * 2 + 1
 
     if (pointerDown) {
-        cameraTarget.x -= 5*(pointer.x - pointerLastX)
-        cameraTarget.y -= 5*(pointer.y - pointerLastY)
+        cameraTarget.x -= camera.viewSize * (pointer.x - pointerLastX)
+        cameraTarget.y -= -camera.viewSize * (pointer.y - pointerLastY) / camera.aspect
     }
 }
 
+function onScroll(event) {
+    camera.viewSize *= event.deltaY > 0 ? 1.15 : 0.75;
+    updateViewport()
+}
+
+// --------------------------------- 
+
+function generateCourseNodes() {
+
+}
 
 // --------------------------------- 
 
