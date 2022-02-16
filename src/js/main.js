@@ -34,11 +34,10 @@ async function start() {
     renderer.domElement.addEventListener( 'wheel', onScroll );
 
     // init
-    //generateCourseNodes()
-    console.log("start")
-    root.courseData = await getAllCourseData("2021", "spring")
-    console.log("done")
-    downloadObjectAsJson(root.courseData, '2021spring-courseData')
+    response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/data/2021spring-courseData.json")
+    json_obj = await response.json()
+
+    console.log(json_obj)
 
     root.courseNodes = []
 

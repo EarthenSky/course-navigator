@@ -2,9 +2,6 @@
 import requests, json, asyncio
 import aiohttp
 
-#with open('../data/courseData.json', 'w') as f:
-#    json.dump({"label":54738}, f)
-
 # -------------------------------
 # atoms
 
@@ -81,7 +78,7 @@ async def getAllCourseSections(year, term, department, courseList):
         ret = await asyncio.gather(*requests)
         return ret
 
-# NOTE: this is most definitely not parallel enough
+# NOTE: this is likely not parallel enough
 # all outlines for a specific course
 async def getAllCourseOutlines(year, term, department, course, sectionList):
     async with aiohttp.ClientSession() as session:
@@ -96,12 +93,9 @@ def getAllCourseData(year, term):
     courseListList = asyncio.run(getAllCourseNumbers(year, term, departmentList))
 
     for department, courseList in zip(departmentList, courseListList):
-        print("======================")
-        print(department["value"])
-        print(str(courseList)[:79])
-        
-        #if department["value"] == "bisc":
-        #    break
+        #print("======================")
+        #print(department["value"])
+        #print(str(courseList)[:79])
 
         if courseList != None:
             sectionListList = asyncio.run(getAllCourseSections(year, term, department["value"], courseList))
@@ -115,8 +109,7 @@ def getAllCourseData(year, term):
     
         department["courseList"] = courseList
 
-    with open('../data/2021-spring-coursedata.json', 'w') as f:
-        json.dump(departmentList, f, separators=(',', ':'))
+    return departmentList
 
 # returns all possible (year, term) pairs
 def getAllTerms():
@@ -124,4 +117,7 @@ def getAllTerms():
 
 
 if __name__ == "__main__":
-    getAllCourseData("2021", "spring")
+    departments = getAllCourseData("2021", "spring")
+
+    with open('../data/2021-spring-coursedata.json', 'w') as f:
+        json.dump(departments, f, separators=(',', ':'))

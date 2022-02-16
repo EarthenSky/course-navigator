@@ -13,8 +13,8 @@
 -
 
 ### data:
-- data stores cached versions of ~25mb of public course outline data per semester, taken over ~30k api requests each. Needless to say, a single request is much faster than 30k.
--
+- data stores cached versions of ~25mb of public course outline data per semester, taken over ~30k api requests each. Needless to say, a single js request is much faster than 30k.
+- do `pip install -r requirements.txt` before running python scripts
 
 ### history:
  The first implementation of this was written in elm, and didn't use the sfu api. I switched to three.js so I could hack something together somewhat quickly.
