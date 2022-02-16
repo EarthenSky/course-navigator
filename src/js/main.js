@@ -1,4 +1,3 @@
-//import { TransformControls } from 'https://cdn.skypack.dev/three@<version>/examples/jsm/controls/TransformControls.js';
 
 var courseData = null
 
@@ -23,7 +22,14 @@ async function start() {
     root.cube = new THREE.Mesh(root.geometry, root.material)
     scene.add(root.cube) // TODO: look into how we should be loading & unloading models from the scene / if we should have multiple scenes.
     */
-
+    
+    // testing text
+    root.font = await loadFont()
+    root.text_geom = createText("some text", root.font)
+    root.material = new THREE.MeshBasicMaterial({color: 0xffffff})
+    root.text = new THREE.Mesh(root.text_geom, root.material)
+    scene.add(root.text)
+    
     // input
     //var transformControls = new THREE.TransformControls(camera, renderer.domElement)
     //transformControls.addEventListener('change', render)
@@ -38,19 +44,18 @@ async function start() {
     response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/data/2021-spring-coursedata-min.json")
     departmentList = await response.json()
 
-    console.log(departmentList)
+
+    //console.log(departmentList)
 
     root.courseNodes = []
 
     departmentList.forEach(department => {
         department.courseList.forEach(course => {
-            root.courseNodes.push({name : department.text + " " + course.text})
+            root.courseNodes.push({name : department.text + " " + course.text, color: department.color})
         })
     })
 
-    console.log(root.courseNodes)
-
-    //
+    //console.log(root.courseNodes)
 
     root.courseNodes.forEach(el => {
         //scene.add(el);
@@ -111,6 +116,44 @@ function onScroll(event) {
 
 function generateCourseNodes() {
 
+}
+
+async function loadFont() {
+    let json;
+    let fontText = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/src/fonts/RobotoSerif_36pt-Black_Regular.json")
+    try {  
+        json = JSON.parse( fontText );
+    } catch (e) {
+        console.warn('THREE.FontLoader: typeface.js support is being deprecated. Use typeface.json instead.')
+        json = JSON.parse( fontText.substring(65, fontText.length - 2) )
+    }
+
+    return Font(json)
+}
+
+function createText(text, font) {
+    const loader = new THREE.FontLoader()
+    
+    let geometry = null
+    
+    // wait until font != null
+    while (geometry == null) {
+        timeout(100);
+    }
+
+    geometry = new TextGeometry(text, {
+        font: font,
+        size: 80,
+        height: 5,
+        curveSegments: 12,
+        bevelEnabled: true,
+        bevelThickness: 10,
+        bevelSize: 8,
+        bevelOffset: 0,
+        bevelSegments: 5
+    })
+
+    return geometry
 }
 
 // --------------------------------- 
