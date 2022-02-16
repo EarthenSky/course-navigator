@@ -120,7 +120,7 @@ function generateCourseNodes() {
 
 async function loadFont() {
     let json;
-    let fontText = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/src/fonts/RobotoSerif_36pt-Black_Regular.json")
+    let fontText = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/src/fonts/RobotoSerif36ptBlack_Regular.json")
     try {  
         json = JSON.parse( fontText );
     } catch (e) {
