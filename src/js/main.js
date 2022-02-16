@@ -17,11 +17,12 @@ async function start() {
 
     // geometry
     
+    /*
     root.geometry = new THREE.BoxGeometry()
     root.material = new THREE.MeshBasicMaterial( { color: 0xf0ff40 } )
     root.cube = new THREE.Mesh(root.geometry, root.material)
-    
     scene.add(root.cube) // TODO: look into how we should be loading & unloading models from the scene / if we should have multiple scenes.
+    */
 
     // input
     //var transformControls = new THREE.TransformControls(camera, renderer.domElement)
@@ -35,23 +36,31 @@ async function start() {
 
     // init
     response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/data/2021-spring-coursedata-min.json")
-    json_obj = await response.json()
+    departmentList = await response.json()
 
-    console.log(json_obj)
+    console.log(departmentList)
 
     root.courseNodes = []
+
+    departmentList.forEach(department => {
+        department.courseList.forEach(course => {
+            root.courseNodes.push({name : department.text + " " + course.text})
+        })
+    })
+
+    console.log(root.courseNodes)
 
     //
 
     root.courseNodes.forEach(el => {
-        scene.add(el);
+        //scene.add(el);
     });
 
 }
 
 function update() {
-    root.cube.rotation.x += 0.01
-    root.cube.rotation.y += 0.01
+    //root.cube.rotation.x += 0.01
+    //root.cube.rotation.y += 0.01
 
     camera.position.x = cameraTarget.x
     camera.position.y = cameraTarget.y

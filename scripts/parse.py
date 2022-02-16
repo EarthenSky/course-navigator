@@ -1,5 +1,7 @@
 import json
 
+from colors import pallete
+
 # TODO:
 # - get big json from data & break it into visible information only. That is: course prerequisites, department, course number, and course title
 # - will need to do some parsing on the course pre-requisite strings
@@ -18,9 +20,11 @@ def parse_course_data(year, term):
 
     # TODO: fill department list minimum with neccesary & parsed data
     # NOTE: i may want to add more searchable data to this later
+    the_pallete = iter(pallete)
     for department in department_list:
         department_min = {}
         department_min["text"] = department["text"]
+        department_min["color"] = next(the_pallete)
         department_min["courseList"] = []
 
         if department["courseList"] == None: 
