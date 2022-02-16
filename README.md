@@ -1,4 +1,4 @@
-# your-schedule
+# course-navigator
  your schedulke
 
 ### features:
@@ -12,5 +12,5 @@
 - 
 
 ### data:
-- data stores cached versions of ~50mb of public course outline data, taken over ~100k api requests. Needless to say, 1 request is much faster than 100k.
+- data stores cached versions of ~25mb of public course outline data per semester, taken over ~30k api requests each. Needless to say, a single request is much faster than 30k.
 - 
