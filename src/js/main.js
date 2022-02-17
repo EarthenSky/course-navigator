@@ -1,5 +1,61 @@
+import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+import { TextGeometry } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/geometries/TextGeometry.js';
+//import WebGL from 'https://cdn.skypack.dev/three@0.137.5/examples/jsm/capabilities/WebGL.js';
 
-import * as THREE from 'https://cdn.skypack.dev/three@<version>';
+//import { OrbitControls } from 'https://cdn.skypack.dev/three@0.137.5/examples/jsm/controls/OrbitControls.js';
+
+//const THREE = await import('https://cdn.skypack.dev/three@0.130.0')
+//const { OrbitControls } = await import('https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js')
+
+// --------------------------------- 
+// setup scene & renderer
+
+const scene = new THREE.Scene()
+// TODO: make this orthographic & figure out how to draw boxes & text
+//const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0, 10)
+camera.viewSize = 5.0
+camera.position.z = 5
+
+const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.setSize(window.innerWidth, window.innerHeight, false)
+renderer.powerPreference = "low-power" // TODO: check that the syntax here is correct
+document.body.appendChild(renderer.domElement)
+
+//const controls = new OrbitControls( camera, renderer.domElement );
+
+// --------------------------------- 
+// objects
+
+const root = {}
+
+// --------------------------------- 
+// for window resizing
+
+window.addEventListener('resize', updateViewport, false)
+updateViewport()
+
+function updateViewport() {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.left = -camera.viewSize
+    camera.right = camera.viewSize
+    camera.top = -camera.viewSize * (1 / camera.aspect)
+    camera.bottom = camera.viewSize * (1 / camera.aspect)
+    camera.updateProjectionMatrix()
+
+    renderer.setSize(window.innerWidth, window.innerHeight, false)
+}
+
+// --------------------------------- 
+// main loop
+
+function animate() {
+    requestAnimationFrame(animate)
+    update()
+    renderer.render(scene, camera)
+}
+
+// ---------------------------------
 
 var courseData = null
 
@@ -18,19 +74,18 @@ async function start() {
 
     // geometry
     
-    /*
+    
     root.geometry = new THREE.BoxGeometry()
     root.material = new THREE.MeshBasicMaterial( { color: 0xf0ff40 } )
     root.cube = new THREE.Mesh(root.geometry, root.material)
     scene.add(root.cube) // TODO: look into how we should be loading & unloading models from the scene / if we should have multiple scenes.
-    */
     
     // testing text
     root.font = await loadFont()
     root.text_geom = createText("some text", root.font)
-    //root.material = new THREE.MeshBasicMaterial({color: 0xffffff})
-    //root.text = new THREE.Mesh(root.text_geom, root.material)
-    //scene.add(root.text)
+    root.material = new THREE.MeshBasicMaterial({color: 0xffffff})
+    root.text = new THREE.Mesh(root.text_geom, root.material)
+    scene.add(root.text)
     
     // input
     //var transformControls = new THREE.TransformControls(camera, renderer.domElement)
@@ -43,9 +98,8 @@ async function start() {
     renderer.domElement.addEventListener( 'wheel', onScroll );
 
     // init
-    response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/data/2021-spring-coursedata-min.json")
-    departmentList = await response.json()
-
+    let response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/data/2021-spring-coursedata-min.json")
+    let departmentList = await response.json()
 
     //console.log(departmentList)
 
@@ -120,152 +174,16 @@ function generateCourseNodes() {
 
 }
 
-// NOTE:
-// not my code
-class Font {
-	constructor( data ) {
-		this.type = 'Font';
-		this.data = data;
-	}
-
-	generateShapes( text, size = 100 ) {
-		const shapes = [];
-		const paths = createPaths( text, size, this.data );
-
-		for ( let p = 0, pl = paths.length; p < pl; p ++ ) {
-			Array.prototype.push.apply( shapes, paths[ p ].toShapes() );
-		}
-		return shapes;
-	}
-}
-
-function createPaths( text, size, data ) {
-
-	const chars = Array.from( text );
-	const scale = size / data.resolution;
-	const line_height = ( data.boundingBox.yMax - data.boundingBox.yMin + data.underlineThickness ) * scale;
-
-	const paths = [];
-
-	let offsetX = 0, offsetY = 0;
-
-	for ( let i = 0; i < chars.length; i ++ ) {
-
-		const char = chars[ i ];
-
-		if ( char === '\n' ) {
-
-			offsetX = 0;
-			offsetY -= line_height;
-
-		} else {
-
-			const ret = createPath( char, scale, offsetX, offsetY, data );
-			offsetX += ret.offsetX;
-			paths.push( ret.path );
-
-		}
-
-	}
-
-	return paths;
-
-}
-
-function createPath( char, scale, offsetX, offsetY, data ) {
-
-	const glyph = data.glyphs[ char ] || data.glyphs[ '?' ];
-
-	if ( ! glyph ) {
-
-		console.error( 'THREE.Font: character "' + char + '" does not exists in font family ' + data.familyName + '.' );
-
-		return;
-
-	}
-
-	const path = new ShapePath();
-
-	let x, y, cpx, cpy, cpx1, cpy1, cpx2, cpy2;
-
-	if ( glyph.o ) {
-
-		const outline = glyph._cachedOutline || ( glyph._cachedOutline = glyph.o.split( ' ' ) );
-
-		for ( let i = 0, l = outline.length; i < l; ) {
-
-			const action = outline[ i ++ ];
-
-			switch ( action ) {
-
-				case 'm': // moveTo
-
-					x = outline[ i ++ ] * scale + offsetX;
-					y = outline[ i ++ ] * scale + offsetY;
-
-					path.moveTo( x, y );
-
-					break;
-
-				case 'l': // lineTo
-
-					x = outline[ i ++ ] * scale + offsetX;
-					y = outline[ i ++ ] * scale + offsetY;
-
-					path.lineTo( x, y );
-
-					break;
-
-				case 'q': // quadraticCurveTo
-
-					cpx = outline[ i ++ ] * scale + offsetX;
-					cpy = outline[ i ++ ] * scale + offsetY;
-					cpx1 = outline[ i ++ ] * scale + offsetX;
-					cpy1 = outline[ i ++ ] * scale + offsetY;
-
-					path.quadraticCurveTo( cpx1, cpy1, cpx, cpy );
-
-					break;
-
-				case 'b': // bezierCurveTo
-
-					cpx = outline[ i ++ ] * scale + offsetX;
-					cpy = outline[ i ++ ] * scale + offsetY;
-					cpx1 = outline[ i ++ ] * scale + offsetX;
-					cpy1 = outline[ i ++ ] * scale + offsetY;
-					cpx2 = outline[ i ++ ] * scale + offsetX;
-					cpy2 = outline[ i ++ ] * scale + offsetY;
-
-					path.bezierCurveTo( cpx1, cpy1, cpx2, cpy2, cpx, cpy );
-
-					break;
-
-			}
-
-		}
-
-	}
-
-	return { offsetX: glyph.ha * scale, path: path };
-}
-
-
 async function loadFont() {
     let json;
     let response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/src/fonts/RobotoSerif36ptBlack_Regular.json")
     json = await response.json()
     
-    /*
-    try {  
-        json = JSON.parse( fontText );
-    } catch (e) {
-        console.warn('THREE.FontLoader: typeface.js support is being deprecated. Use typeface.json instead.')
-        json = JSON.parse( fontText.substring(65, fontText.length - 2) )
-    }*/
+    // TODO: use real font loaders & stuff
 
     //return json
     console.log("font loaded")
-    return new Font(json)
+    return new THREE.Font(json)
 }
 
 function createText(text, font) {   
@@ -278,7 +196,7 @@ function createText(text, font) {
         console.log("nuuuuuuuuuuu")
     }
 
-    geometry = new THREE.TextGeometry(text, {
+    geometry = new TextGeometry(text, {
         font: font,
         size: 80,
         height: 5,
@@ -295,6 +213,10 @@ function createText(text, font) {
 
 // --------------------------------- 
 
+start()
+animate()
+
+/*
 // TODO: test this
 if ( WebGL.isWebGLAvailable() ) {
     start()
@@ -302,4 +224,4 @@ if ( WebGL.isWebGLAvailable() ) {
 } else {
 	const warning = WebGL.getWebGLErrorMessage()
 	document.getElementById( 'container' ).appendChild( warning )
-}
+}*/

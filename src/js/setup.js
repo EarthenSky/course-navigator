@@ -1,4 +1,6 @@
 
+import * as THREE from 'https://cdn.skypack.dev/three@0.137.5'
+
 // --------------------------------- 
 // setup scene & renderer
 
@@ -38,6 +40,8 @@ function updateViewport() {
 
 // --------------------------------- 
 // main loop
+
+//import "/js/main.js";
 
 function animate() {
     requestAnimationFrame(animate)
