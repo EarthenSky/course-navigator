@@ -1,4 +1,6 @@
 
+import * as THREE from 'https://cdn.skypack.dev/three@<version>';
+
 var courseData = null
 
 const pointer = new THREE.Vector2()
@@ -26,9 +28,9 @@ async function start() {
     // testing text
     root.font = await loadFont()
     root.text_geom = createText("some text", root.font)
-    root.material = new THREE.MeshBasicMaterial({color: 0xffffff})
-    root.text = new THREE.Mesh(root.text_geom, root.material)
-    scene.add(root.text)
+    //root.material = new THREE.MeshBasicMaterial({color: 0xffffff})
+    //root.text = new THREE.Mesh(root.text_geom, root.material)
+    //scene.add(root.text)
     
     // input
     //var transformControls = new THREE.TransformControls(camera, renderer.domElement)
@@ -118,30 +120,165 @@ function generateCourseNodes() {
 
 }
 
+// NOTE:
+// not my code
+class Font {
+	constructor( data ) {
+		this.type = 'Font';
+		this.data = data;
+	}
+
+	generateShapes( text, size = 100 ) {
+		const shapes = [];
+		const paths = createPaths( text, size, this.data );
+
+		for ( let p = 0, pl = paths.length; p < pl; p ++ ) {
+			Array.prototype.push.apply( shapes, paths[ p ].toShapes() );
+		}
+		return shapes;
+	}
+}
+
+function createPaths( text, size, data ) {
+
+	const chars = Array.from( text );
+	const scale = size / data.resolution;
+	const line_height = ( data.boundingBox.yMax - data.boundingBox.yMin + data.underlineThickness ) * scale;
+
+	const paths = [];
+
+	let offsetX = 0, offsetY = 0;
+
+	for ( let i = 0; i < chars.length; i ++ ) {
+
+		const char = chars[ i ];
+
+		if ( char === '\n' ) {
+
+			offsetX = 0;
+			offsetY -= line_height;
+
+		} else {
+
+			const ret = createPath( char, scale, offsetX, offsetY, data );
+			offsetX += ret.offsetX;
+			paths.push( ret.path );
+
+		}
+
+	}
+
+	return paths;
+
+}
+
+function createPath( char, scale, offsetX, offsetY, data ) {
+
+	const glyph = data.glyphs[ char ] || data.glyphs[ '?' ];
+
+	if ( ! glyph ) {
+
+		console.error( 'THREE.Font: character "' + char + '" does not exists in font family ' + data.familyName + '.' );
+
+		return;
+
+	}
+
+	const path = new ShapePath();
+
+	let x, y, cpx, cpy, cpx1, cpy1, cpx2, cpy2;
+
+	if ( glyph.o ) {
+
+		const outline = glyph._cachedOutline || ( glyph._cachedOutline = glyph.o.split( ' ' ) );
+
+		for ( let i = 0, l = outline.length; i < l; ) {
+
+			const action = outline[ i ++ ];
+
+			switch ( action ) {
+
+				case 'm': // moveTo
+
+					x = outline[ i ++ ] * scale + offsetX;
+					y = outline[ i ++ ] * scale + offsetY;
+
+					path.moveTo( x, y );
+
+					break;
+
+				case 'l': // lineTo
+
+					x = outline[ i ++ ] * scale + offsetX;
+					y = outline[ i ++ ] * scale + offsetY;
+
+					path.lineTo( x, y );
+
+					break;
+
+				case 'q': // quadraticCurveTo
+
+					cpx = outline[ i ++ ] * scale + offsetX;
+					cpy = outline[ i ++ ] * scale + offsetY;
+					cpx1 = outline[ i ++ ] * scale + offsetX;
+					cpy1 = outline[ i ++ ] * scale + offsetY;
+
+					path.quadraticCurveTo( cpx1, cpy1, cpx, cpy );
+
+					break;
+
+				case 'b': // bezierCurveTo
+
+					cpx = outline[ i ++ ] * scale + offsetX;
+					cpy = outline[ i ++ ] * scale + offsetY;
+					cpx1 = outline[ i ++ ] * scale + offsetX;
+					cpy1 = outline[ i ++ ] * scale + offsetY;
+					cpx2 = outline[ i ++ ] * scale + offsetX;
+					cpy2 = outline[ i ++ ] * scale + offsetY;
+
+					path.bezierCurveTo( cpx1, cpy1, cpx2, cpy2, cpx, cpy );
+
+					break;
+
+			}
+
+		}
+
+	}
+
+	return { offsetX: glyph.ha * scale, path: path };
+}
+
+
 async function loadFont() {
     let json;
-    let fontText = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/src/fonts/RobotoSerif36ptBlack_Regular.json")
+    let response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/src/fonts/RobotoSerif36ptBlack_Regular.json")
+    json = await response.json()
+    
+    /*
     try {  
         json = JSON.parse( fontText );
     } catch (e) {
         console.warn('THREE.FontLoader: typeface.js support is being deprecated. Use typeface.json instead.')
         json = JSON.parse( fontText.substring(65, fontText.length - 2) )
-    }
+    }*/
 
-    return Font(json)
+    //return json
+    console.log("font loaded")
+    return new Font(json)
 }
 
-function createText(text, font) {
-    const loader = new THREE.FontLoader()
-    
+function createText(text, font) {   
+    console.log("createText ...") 
     let geometry = null
     
     // wait until font != null
-    while (geometry == null) {
-        timeout(100);
+    if (font == null) {
+        //timeout(100)
+        console.log("nuuuuuuuuuuu")
     }
 
-    geometry = new TextGeometry(text, {
+    geometry = new THREE.TextGeometry(text, {
         font: font,
         size: 80,
         height: 5,
