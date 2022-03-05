@@ -1,3 +1,4 @@
+/*
 function downloadObjectAsJson(exportObj, exportName){
     var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
     var downloadAnchorNode = document.createElement('a');
@@ -6,4 +7,4 @@ function downloadObjectAsJson(exportObj, exportName){
     document.body.appendChild(downloadAnchorNode); // required for firefox
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
-}
+}*/

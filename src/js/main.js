@@ -1,5 +1,6 @@
 import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
 import { TextGeometry } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/geometries/TextGeometry.js';
+import { Font } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/geometries/TextGeometry.js';
 //import WebGL from 'https://cdn.skypack.dev/three@0.137.5/examples/jsm/capabilities/WebGL.js';
 
 //import { OrbitControls } from 'https://cdn.skypack.dev/three@0.137.5/examples/jsm/controls/OrbitControls.js';
@@ -21,8 +22,6 @@ const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight, false)
 renderer.powerPreference = "low-power" // TODO: check that the syntax here is correct
 document.body.appendChild(renderer.domElement)
-
-//const controls = new OrbitControls( camera, renderer.domElement );
 
 // --------------------------------- 
 // objects
@@ -64,8 +63,6 @@ var pointerDown = false
 
 const cameraTarget = new THREE.Vector2()
 
-//network_test()
-
 // --------------------------------- 
 
 async function start() {
@@ -73,7 +70,6 @@ async function start() {
     //courseData = getAllCourseData("2021", "spring")
 
     // geometry
-    
     
     root.geometry = new THREE.BoxGeometry()
     root.material = new THREE.MeshBasicMaterial( { color: 0xf0ff40 } )
@@ -170,10 +166,6 @@ function onScroll(event) {
 
 // --------------------------------- 
 
-function generateCourseNodes() {
-
-}
-
 async function loadFont() {
     let json;
     let response = await fetch("https://raw.githubusercontent.com/EarthenSky/course-navigator/main/src/fonts/RobotoSerif36ptBlack_Regular.json")
@@ -216,12 +208,4 @@ function createText(text, font) {
 start()
 animate()
 
-/*
-// TODO: test this
-if ( WebGL.isWebGLAvailable() ) {
-    start()
-	animate()
-} else {
-	const warning = WebGL.getWebGLErrorMessage()
-	document.getElementById( 'container' ).appendChild( warning )
-}*/
+// TODO: do a webgl check
