@@ -6,7 +6,6 @@ pallete = """#050403
 #f1641f
 #fca570
 #ffe0b7
-#ffffff
 #fff089
 #f8c53a
 #e88a36

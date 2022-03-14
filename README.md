@@ -22,7 +22,6 @@
 ### history:
  The first implementation of this was written in elm, and didn't use the sfu api. I switched to three.js so I could hack something together somewhat quickly.
 
-
 ### TODO: 
 - visualize relationships
 - add all relationships in CMPT

@@ -52,7 +52,7 @@ async function async_start() {
     console.log(departmentList)
    
     departmentList.forEach(department => {
-        if (department.text != "CMPT") return;
+        //if (department.text != "CMPT") return;
         department.courseList.forEach(course => {
             root.courseNodes.push({name : department.text + " " + course.text, color: department.color})
         })
@@ -89,12 +89,16 @@ function draw() {
     root.courseNodes.forEach(el => {
         ctx.fillStyle = el.color;
         ctx.fillText(el.name, el.x - string_radius(el.name), el.y);
-        
+    });
+
+    root.courseNodes.forEach(el => {
         ctx.beginPath()
         ctx.strokeStyle = el.color;
+        ctx.fillStyle = el.color;
         ctx.lineWidth = 8;
         ctx.arc(el.x, el.y, string_radius(el.name), 0, 2*Math.PI, false);
         ctx.stroke();
+        ctx.closePath();
     });
 
     ctx.fillStyle = "#894";
@@ -104,7 +108,6 @@ function draw() {
 }
 
 function update() {
-
     let left = []
     let right = []
     let top = []
@@ -231,11 +234,12 @@ function update() {
 }
 
 function animate() {
-    requestAnimationFrame(animate)
-    
     update()
     draw()
+
+    requestAnimationFrame(animate)
 }
+
 
 // --------------------------------- 
 
@@ -276,11 +280,9 @@ function updatePointer(event) {
         cameraX = cameraTarget.x
         cameraY = cameraTarget.y
     }
-
 }
 
 function onScroll(event) {
-    // TODO: add a zoom
     scale *= event.deltaY > 0 ? 0.75 : 1.25;
     //updateViewport()
 }
@@ -289,5 +291,6 @@ function onScroll(event) {
 
 start()
 async_start()
+
 draw()
 animate()
